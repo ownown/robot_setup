@@ -76,3 +76,10 @@ sudo dpkg-recongfigure unattended-upgrades
 ## Configure Pi
 
 - Run the setup script as sudo
+- This will:
+  - update packages
+  - install dependencies
+  - enable SPI and I2C
+  - download, build, and install the BrickPi3 C++ libraries
+  - install ROS2
+  - set up ROS2 workspace and download robot control code (not yet implemented, for now follow [ROS2 documentation](https://docs.ros.org/en/foxy/Tutorials/Workspace/Creating-A-Workspace.html) on setting up a workspace
