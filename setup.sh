@@ -24,6 +24,7 @@
 ## Links:                                                                     ##
 ## https://archive.raspberrypi.org/debian/pool/main/r/raspi-config/           ##
 ## https://github.com/DexterInd/BrickPi3                                      ##
+## https://github.com/ownown/brickpi3_cpp                                     ##
 ## https://docs.ros.org/en/foxy/                                              ##
 ##                                                                            ##
 ################################################################################
@@ -62,6 +63,7 @@
 BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
 CONFIG=/boot/config.txt
 MODULES=/etc/modules
+UDEV_RULES=/etc/udec/rules.d
 
 # BrickPi3 libraries
 TMP=/tmp/BrickPi3
@@ -123,7 +125,7 @@ echo "Setting up SPI"
 # Enable SPI in the boot config
 # This is modified from raspi-config
 if ! grep -q -E "dtparam=spi[= ]on" $CONFIG; then
-    echo "dtparam=spi on" > $CONFIG
+    echo "dtparam=spi=on" > $CONFIG
 elif grep -q -E "(#+)dtparam=spi[= ]on" $CONFIG; then
     sed $CONFIG -i -e "s/#+\(dtparam=spi[= ]on\)/\1/"
 elif grep -q -E "dtparam=spi[= ]off" $CONFIG; then
@@ -139,7 +141,7 @@ fi
 # Enable SPI in /etc/modules
 
 if ! grep -q "^(#)*( )*spi-dev" $MODULES; then
-    echo "i2c-dev" >> $MODULES
+    echo "spi-dev" >> $MODULES
 else
     sed $MODULES -i -e "S/^#[[:space:]]*\(spi-dev\)/\1"
 fi
@@ -157,7 +159,7 @@ fi
 
 ################################################################################
 
-dtparam spi=on
+sudo dtparam spi=on
 
 ################################################################################
 # Enable I2C
@@ -167,7 +169,7 @@ echo "Setting up I2C"
 # Enable I2C in the boot config
 
 if ! grep -q -E "dtparam=i2c(_arm)?[= ]on" $CONFIG; then
-    echo "dtparam=i2c_arm on" > $CONFIG
+    echo "dtparam=i2c_arm=on" > $CONFIG
 elif grep -q -E "(#+)dtparam=i2c(_arm)?[= ]on" $CONFIG; then
     sed $CONFIG -i -e "s/#+\(dtparam=i2c\(_arm\)?[= ]on\)/\1/"
 elif grep -q -E "dtparam=i2c(_arm)?[= ]off" $CONFIG; then
@@ -193,8 +195,22 @@ fi
 
 ################################################################################
 
-dtparam i2c_arm=on
-modprobe i2c-dev
+sudo dtparam i2c_arm=on
+sudo modprobe i2c-dev
+
+################################################################################
+# Create groups
+
+# Allows us to user the SPI without root privileges
+sudo groupadd --system spi
+sudo adduser ubuntu spi
+
+if ! [ -e $UDEV_RULES/90-spi.rules ] || ! $( grep -iq spi $UDEV_RULES/90-spi.rules ); then
+    export $UDEV_RULES
+    sudo bash -c 'echo "SUBSYSTEM==\"spidev\", GROUP=\"spi\"" > $UDEV_RULES/90-spi.rules'
+else
+    echo "Existing SPI settings in $UDEV_RULES/90-spi.rules"
+fi
 
 ################################################################################
 ################################################################################

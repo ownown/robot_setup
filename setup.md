@@ -49,7 +49,7 @@ sudo apt update && sudo apt install -y arp-scan
 sudo arp-scan -l | grep -i raspberry
 ```
 
-- Connect to the Pi using SSH.
+- Connect to the Pi using SSH. Ubuntu Server 20.04 already appears to have SSH activated
 - The default login username and password are both `ubuntu`
 
 ```bash
